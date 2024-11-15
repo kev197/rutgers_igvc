@@ -1,0 +1,118 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 70
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Status1
+        - /RobotModel1
+      Splitter Ratio: 0.5
+    Tree Height: 296
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Grid
+      Plane: XY
+      Reference Frame: map  # Changed from <Fixed Frame> to map
+    - Alpha: 0.8
+      Class: rviz/RobotModel
+      Collision Enabled: true
+      Enabled: true
+      Name: RobotModel
+      Robot Description: robot_description
+      Visual Enabled: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Update Interval: 0
+    - Alpha: 1
+      Class: rviz/Map
+      Color Scheme: map
+      Enabled: true
+      Name: Map
+      Topic: /map
+      Unreliable: false
+    - Alpha: 1
+      Class: rviz/LaserScan
+      Enabled: true
+      Name: LaserScan
+      Topic: scan
+      Unreliable: false
+    - Alpha: 1
+      Class: rviz/Path
+      Enabled: true
+      Name: Global Path
+      Topic: /move_base/NavfnROS/plan
+      Unreliable: false
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: map  # Changed from odom to map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
+      Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 5.9135355949401855
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Field of View: 0.7853981852531433
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.33000001311302185
+      Target Frame: map  # Changed from <Fixed Frame> to map
+      Yaw: 5.5
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 800
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd000000010000000000000158000002c6fc0200000002fb000000100044006900730070006c006100790073010000003d000001ab000000c900fffffffb0000000a0056006900650077007301000001ee00000115000000a400ffffff00000352000002c600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Views:
+    collapsed: false
+  Width: 1200
+  X: 246
+  Y: 131

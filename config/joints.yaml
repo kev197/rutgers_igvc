@@ -1,0 +1,6 @@
+type: "joint_state_controller/JointStateController"
+publish_rate: 80
+
+joints:
+  - name: 'joint_left_wheel'
+  - name: 'joint_right_wheel'
