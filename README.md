@@ -38,3 +38,18 @@ python3 src/igvc/scripts/movement.py
 ```
 
 We make use of various OpenCV libraries to process the image, then we send that data to a movement node that controls the robot. 
+
+## Competition
+
+![image](https://github.com/user-attachments/assets/6281bd20-9f6c-4c79-a98e-cac00979c380)
+
+## OpenCV Library
+
+This program makes extensive use of the OpenCV library. OpenCV is an open source computer vision library that aids in the creation of real-time computer vision projects such as this one
+
+## Our Robot
+
+## Results
+
+## Go Rutgers!
+
