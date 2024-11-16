@@ -28,7 +28,7 @@ To run the simulation, use the command
 roslaunch igvc display.launch
 ```
 
-This will initialize your robot in rviz as well as set up all the necessary nodes and topics for the robot to function. It also generates a world in gazebo with accordance with the testWorld.world file in the /igvc/worlds directory
+This will initialize your robot in rviz as well as set up all the necessary nodes and topics for the robot to function. It also generates a world in gazebo with accordance with the testWorld.world file in the /igvc/worlds directory.
 
 The nodes responsible for movement of the robot are initialized separately as so:
 
