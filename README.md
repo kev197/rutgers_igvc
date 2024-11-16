@@ -42,10 +42,14 @@ We make use of various OpenCV libraries to process the image, then we send that 
 ## Competition
 
 ![image](https://github.com/user-attachments/assets/6281bd20-9f6c-4c79-a98e-cac00979c380)
+![image](https://github.com/user-attachments/assets/012ade39-81c1-4ca6-ad4e-872e6dca8f61)
+![image](https://github.com/user-attachments/assets/740c576d-eab8-43c6-88ce-4f2fb41184a0)
+
+
 
 ## OpenCV Library
 
-This program makes extensive use of the OpenCV library. OpenCV is an open source computer vision library that aids in the creation of real-time computer vision projects such as this one
+This program makes extensive use of the OpenCV library. OpenCV is an open source computer vision library that aids in the creation of real-time computer vision projects. 
 
 ## Our Robot
 
