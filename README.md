@@ -1,6 +1,6 @@
 # IGVC Competition code
 
-This is the code for the Rutgers IGVC robotics club, a child club of IEEE. We make an autonomously driven vehicle designed to navigate a track of various obstacles and constraints, among other things. Our task is the make a robot that will navigate this track efficiently and without human aid. 
+This is the code for the Rutgers IGVC robotics club, a member of Rutgers IEEE. We make an autonomously driven vehicle designed to navigate a track of various obstacles and constraints, among other things. Our task is the make a robot that will navigate this track efficiently and without human aid. 
 
 ## Installation
 
