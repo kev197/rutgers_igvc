@@ -6,15 +6,15 @@ This is the code for the Rutgers IGVC robotics club, a child club of IEEE. We ma
 
 The Ubuntu version is 20.04, and the ROS version is noetic. To run the code, just put the package in the src directory of your chosen workspace and run the command
 
-'''bash
+```bash
 catkin_make
-'''
+```
 
 Also, every time you open a new terminal run
 
-'''bash
+```bash
 source devel/setup.bash
-'''
+```
 
 to source the directory
 
@@ -24,17 +24,17 @@ _Warning: Display.launch will not properly launch the gazebo world without the n
 
 To run the simulation, use the command
 
-'''bash
+```bash
 roslaunch igvc display.launch
-'''
+```
 
 This will initialize your robot in rviz as well as set up all the necessary nodes and processes for the robot to function. It also generates a world in gazebo with accordance with the testWorld.world file in the /igvc/worlds directory
 
 The nodes responsible for movement of the robot are initialized separately as so:
 
-'''bash
+```bash
 python3 src/igvc/scripts/houghLines.py
 python3 src/igvc/scripts/movement.py
-'''
+```
 
 We make use of various OpenCV libraries to process the image, then we send that data to a movement node that controls the robot. 
