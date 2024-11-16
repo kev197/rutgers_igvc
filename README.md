@@ -51,7 +51,7 @@ We make use of various OpenCV libraries to process the image, then we send that 
 
 This program makes extensive use of the OpenCV library. OpenCV is an open source computer vision library that aids in the creation of real-time computer vision projects. 
 
-## Our Robot
+## The Robot
 
 ## Results
 
