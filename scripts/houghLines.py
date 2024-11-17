@@ -18,10 +18,10 @@ class image_converter:
 
   def __init__(self):
     self.image_pub = rospy.Publisher("/image_raw",Image)
-
     self.bridge = CvBridge()
     self.image_sub = rospy.Subscriber("/image_raw",Image,self.callback)
     self.x_avg_pub = rospy.Publisher("/avg_and_width", pair, queue_size=10)
+    self.move_pub = rospy.Publisher('/mobile_base_controller/cmd_vel', Twist, queue_size = 1)
 
   def callback(self,data):
     try:
@@ -30,37 +30,76 @@ class image_converter:
     except CvBridgeError as e:
       print(e)
 
+    (h,w) = cv_image.shape[:2]
+
+    #shrinks region of interest horizontally
+    scale = (h//5)+150
+    # shrinks region of interest vertically
+    widthScale = 0
+
+    # Making a heap. The heap will be used to store all the x-coordinates of
+    # obstacles/potholes/lanes. We will calculate the largest gap between any two 
+    # of these, and place the "midpoint" (where our robot goes) between the two
+
+    # Creating empty heap 
+    heap = [] 
+    heapify(heap) 
+
+    # creates a new region of interest for cones
+    cropped_image_original = cv_image[(scale+120):(h-scale+130), widthScale+0:(w-widthScale-0)]
+    # Extracts orange from image and places coordinates associated with blobs of orange
+    # into an iterable list
+    hsv = cv2.cvtColor(cropped_image_original, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv,(10,200,50), (20,255,220) )
+    inverted_img = cv2.bitwise_not(mask)
+    params = cv2.SimpleBlobDetector_Params()
+    params.filterByArea = False
+    params.minArea = 10
+    # params.maxArea = 100
+    params.filterByCircularity = False
+    params.filterByConvexity = False
+    params.filterByInertia = False
+    detector = cv2.SimpleBlobDetector_create(params)
+    keypoints = detector.detect(inverted_img)
+    for point in keypoints:
+      # place detected orange coordinates into heap
+      heappush(heap, [point.pt[0]+0, point.pt[1]])
+
+    # this code just rescales the detected points to the original image, then 
+    # displays it on cv_image
+    for point in keypoints:
+      point.pt = (point.pt[0]+widthScale+0, point.pt[1]+scale+120)
+    draw_keypoints(cv_image, keypoints, (20, 255, 100))
+    
+    draw_keypoints(hsv, keypoints, (20, 255, 100))
+    cv2.imshow("keypoints on img", hsv)
+
     grayImage = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
     (thresh, blackAndWhiteImage) = cv2.threshold(grayImage, 127, 255, cv2.THRESH_BINARY)
 
     # blurs the image
     blur = cv2.GaussianBlur(grayImage, (7, 7), 0)
+    hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+    sensitivity = 15
+    mask = cv2.inRange(hsv,(0, 0, 255-sensitivity), (255, sensitivity, 255) )
+    inverted_img = cv2.bitwise_not(mask)
 
     #apply canny edge 
-    v = np.median(grayImage)
+    v = np.median(blur)
     sigma = 0.33
     lower = int(max(0, (1.0 - sigma) * v))
     upper = int(min(255, (1.0 + sigma) * v))
-    edge = cv2.Canny(grayImage, lower+3000, upper+3000, apertureSize = 5)
+    edge = cv2.Canny(inverted_img, lower+3000, upper+3000, apertureSize = 5)
 
     #dilate the edges
     kernel = np.ones((5,5),np.uint8)
     dilation = cv2.dilate(edge,kernel,iterations = 1)
 
-    (h,w) = cv_image.shape[:2]
-
-    #shrinks region of interest horizontally
-    scale = (h//5)+100
-    # shrinks region of interest vertically
-    widthScale = 200
-
-
     # crops image to fit a "region of interest"
-    cropped_image = dilation[scale:(h-scale-100), widthScale:(w-widthScale)]
-    # cv2.imshow("region of interest", cropped_image)
+    houghLinesScaleY = scale + 50
+    cropped_image = dilation[houghLinesScaleY:(h-scale), widthScale:(w-widthScale)]
 
-
-    # 720x1080 -> 360x1080 (bottom half of image)
+    cv2.imshow("cropped image", cropped_image)
 
     #lines is an array of lines generated from cropped_image, using hough lines
     lines = cv2.HoughLinesP(cropped_image, 1, np.pi / 180, 20, minLineLength = 150, 
@@ -75,86 +114,61 @@ class image_converter:
     y2_left = h
     y2_right = 0
 
-    # go through each line (the line is a line segment from (x1,y1) to (x2,y2))
-    for cur in lines:
-        x1 = cur[0][0]
-        y1 = cur[0][1]
-        x2 = cur[0][2]
-        y2 = cur[0][3]
+    # checks for empty lines. If empty, the robot probably just left the track, so move it backwards
+    if lines is None:
+      print("LINES NOT DETECTED, MOVING BACKWARDS\n")
+      move = Twist()
+      move.linear.x = -1
+      # self.move_pub.publish(move)
+    elif len(lines) == 1:
+      print("LINES NOT DETECTED, MOVING BACKWARDS\n")
+      move = Twist()
+      move.linear.x = -1
+      # self.move_pub.publish(move)
+    else:
+      # go through each line (the line is a line segment from (x1,y1) to (x2,y2))
+      for cur in lines:
+          x1 = cur[0][0]
+          y1 = cur[0][1]
+          x2 = cur[0][2]
+          y2 = cur[0][3]
 
-        # takes the leftmost line
-        if x1 < x1_left and x2 < x2_left:
-            y1_left = y1
-            y2_left = y2
-            x1_left = x1
-            x2_left = x2
-        # takes the rightmost line
-        elif x1 > x1_right and x2 > x2_right:
-            y1_right = y1
-            y2_right = y2
-            x1_right = x1
-            x2_right = x2
+          # takes the leftmost line
+          if x1 < x1_left and x2 < x2_left:
+              y1_left = y1
+              y2_left = y2
+              x1_left = x1
+              x2_left = x2
+          # takes the rightmost line
+          elif x1 > x1_right and x2 > x2_right:
+              y1_right = y1
+              y2_right = y2
+              x1_right = x1
+              x2_right = x2
 
-
-    # print the coordinates of the left and right bounding lines
+    # prints the coordinates of the left and right bounding lines
     # print("\n\n-right-bound-\n")
     # print("({}, {}) - ({}, {})".format(x1_right, y1_right, x2_right, y2_right))
     # print("\n\n-left-bound-\n")
     # print("({}, {}) - ({}, {})".format(x1_left, y1_left, x2_left, y2_left))
 
     #puts the leftbound, rightbound lines on cv_image
-    cv2.line(cv_image, (x1_right+widthScale, y1_right+scale), (x2_right+widthScale, y2_right+scale), (0, 0, 255), 12)
-    cv2.line(cv_image, (x1_left+widthScale, y1_left+scale), (x2_left+widthScale, y2_left+scale), (0, 0, 255), 12)
-
-
-    # calculates a midpoint line and puts it on cv_image
-    x1_avg = int((x2_right + x1_left) / 2)
-    y1_avg = int((y1_right + y1_left) / 2)
-    x2_avg = int((x1_right + x2_left) / 2)
-    y2_avg = int((y2_right + y2_left) / 2)
-
-    # cv2.line(cv_image, (x1_avg+widthScale, h), (x2_avg+widthScale, scale), (255, 0, 0), 30)
-
-    # Making a heap. The heap will be used to store all the x-coordinates of
-    # obstacles/potholes/lanes. We will calculate the largest gap between any two 
-    # of these, and place the "midpoint" (where our robot goes) between the two
-
-    # Creating empty heap 
-    heap = [] 
-    heapify(heap) 
+    cv2.line(cv_image, (x1_right+widthScale, y1_right+houghLinesScaleY), (x2_right+widthScale, y2_right+houghLinesScaleY), (0, 255, 0), 12)
+    cv2.line(cv_image, (x1_left+widthScale, y1_left+houghLinesScaleY), (x2_left+widthScale, y2_left+houghLinesScaleY), (0, 255, 0), 12)
       
     # Adding items to the heap using heappush function 
-    heappush(heap, [(x1_left+x2_left)/2, (y1_left+y2_left)/2]) 
-    heappush(heap, [(x1_right+x2_right)/2, (y1_right+y2_right)/2]) 
-      
-
-    # detects the orange cones. Puts x values in keypoints array, of type KeyPoint
-    cropped_image_original = cv_image[(scale+100):(h-scale+200), widthScale:(w-widthScale)]
-    hsv = cv2.cvtColor(cropped_image_original, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv,(5, 50, 50), (15, 255, 255) )
-    params = cv2.SimpleBlobDetector_Params()
-    params.filterByArea = False
-    params.minArea = 1
-    params.filterByCircularity = False
-    params.filterByConvexity = False
-    params.filterByInertia = False
-    detector = cv2.SimpleBlobDetector_create(params)
-    inverted_img = cv2.bitwise_not(mask)
-    keypoints = detector.detect(inverted_img)
-    for point in keypoints:
-      # print("x is\n")
-      # print("{}".format(point.pt[0]) + "\n")
-      heappush(heap, [point.pt[0], point.pt[1]])
-
-    # this code just rescales the detected points to the original image, then 
-    # displays it on cv_image
-    for point in keypoints:
-      point.pt = (point.pt[0]+widthScale, point.pt[1]+scale+130)
-    draw_keypoints(cv_image, keypoints, (20, 255, 100))
+    left_avg_x = (x1_left + x2_left)/2
+    right_avg_x = (x1_right + x2_right)/2
+    left_avg_y = (y1_left+y2_left)/2
+    right_avg_y = (y1_right+y2_right)/2
+    heappush(heap, [left_avg_x, left_avg_y]) 
+    heappush(heap, [right_avg_x, right_avg_y]) 
 
     avg_x1_x2 = 0
     biggest_gap = 0
     (h_cropped,w_cropped) = cropped_image_original.shape[:2]
+
+    leftMostObstacle = heap[0]
 
     #calculate midpoint based on obstacles and lanes in the heap
     while len(heap) != 1:
@@ -165,33 +179,36 @@ class image_converter:
         biggest_gap = difference
         # if the left obstacle is a lane and the right obstacle is a barrel:
 
-
         # ---------experimental turning ----------------#
-
+        avg_x1_x2 = int(removed[0] + (difference / 2))
         # if the left obstacle is a lane and the right obstacle is a barrel:
-        if removed[0] == (x1_left+x2_left)/2 and current[0] != (x1_right+x2_right)/2:
+        if removed[0] == left_avg_x and current[0] != right_avg_x:
           #shift the midpoint left
-          avg_x1_x2 = int(removed[0] + (difference / 2) - 110*(current[1]/h_cropped))
-          print("the shifted midpoint is {}".format(avg_x1_x2) + "\n")
-          # print("the normal midpoint is {}".format(int(removed[0] + (difference / 2))) + "\n")
+          avg_x1_x2 -= int(125*(current[1]/h_cropped))
         # if the right obstacle is a lane and the left obstacle is a barrel:
-        elif removed[0] != (x1_left+x2_left)/2 and current[0] == (x1_right+x2_right)/2:
+        elif removed[0] != left_avg_x and current[0] == right_avg_x:
           #shift the midpoint right
-          avg_x1_x2 = int(removed[0] + (difference / 2) + 110*(removed[1]/h_cropped))
+          avg_x1_x2 += int(125*(removed[1]/h_cropped))
           # print("{}".format(200*(removed[1]/h_cropped)) + "\n")
-        else:
-          avg_x1_x2 = int(removed[0] + (difference / 2))
-
         # ---------experimental turning ----------------#
 
-        # avg_x1_x2 = int(removed[0] + (difference / 2))
+        # print("normal midpoint is {}".format(int(removed[0] + (difference / 2))) + "\n")
+        # print("the shifted midpoint is {}".format(avg_x1_x2) + "\n")
 
+    # # If the last (rightmost) element of the heap is an obstacle, move rightwards
+    # if leftMostObstacle[0] != left_avg_x:
+    #   avg_x1_x2 -= 250
+
+    # # If the last (rightmost) element of the heap is an obstacle, move rightwards
+    # rightMostObstacle = heap[0]
+    # if rightMostObstacle[0] != right_avg_x:
+    #   avg_x1_x2 += 250
 
     cv2.circle(cv_image, (avg_x1_x2+widthScale, h//2), 10, (255,0,0), thickness=-1)
 
     # publish a pair (/igvc/msg/pair) to the avg_and_width topic
     # This holds the midpoint pixelx and pixel width of camera
-    # This data is used to align robot with midpoint line
+    # The data is used to align robot with midpoint line
     pubPair = pair()
     pubPair.x_avg = avg_x1_x2 + widthScale
     pubPair.width = w
@@ -199,7 +216,7 @@ class image_converter:
 
     # cv2.imshow("blobs", img_with_keypoints)
     cv2.imshow("result", cv_image)
-    cv2.waitKey(10)
+    cv2.waitKey(1)
 
 def draw_keypoints(img, keypoints, color):
     for kp in keypoints:
