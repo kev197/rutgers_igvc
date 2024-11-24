@@ -4,7 +4,7 @@
   <!-- <arg name="rvizconfig" default="$(find igvc)/rviz/urdf.rviz" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find igvc)/rviz/urdf.rviz" />
    -->
-     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find urdf_tutorial)/rviz/urdf.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find urdf_tutorial)/rviz/urdf.rviz" />
 
   <include file="$(find igvc)/launch/gazebo.launch">
     <arg name="model" value="$(arg model)" />

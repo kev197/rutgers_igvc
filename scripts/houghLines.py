@@ -46,7 +46,7 @@ class image_converter:
     heapify(heap) 
 
     # creates a new region of interest for cones
-    cropped_image_original = cv_image[(scale+120):(h-scale+130), widthScale+0:(w-widthScale-0)]
+    cropped_image_original = cv_image[(scale+120):(h-scale+130), widthScale:(w-widthScale)]
     # Extracts orange from image and places coordinates associated with blobs of orange
     # into an iterable list
     hsv = cv2.cvtColor(cropped_image_original, cv2.COLOR_BGR2HSV)
@@ -63,12 +63,12 @@ class image_converter:
     keypoints = detector.detect(inverted_img)
     for point in keypoints:
       # place detected orange coordinates into heap
-      heappush(heap, [point.pt[0]+0, point.pt[1]])
+      heappush(heap, [point.pt[0], point.pt[1]])
 
     # this code just rescales the detected points to the original image, then 
     # displays it on cv_image
     for point in keypoints:
-      point.pt = (point.pt[0]+widthScale+0, point.pt[1]+scale+120)
+      point.pt = (point.pt[0]+widthScale, point.pt[1]+scale+120)
     draw_keypoints(cv_image, keypoints, (20, 255, 100))
     
     draw_keypoints(hsv, keypoints, (20, 255, 100))
@@ -168,8 +168,6 @@ class image_converter:
     biggest_gap = 0
     (h_cropped,w_cropped) = cropped_image_original.shape[:2]
 
-    leftMostObstacle = heap[0]
-
     #calculate midpoint based on obstacles and lanes in the heap
     while len(heap) != 1:
       removed = heappop(heap)
@@ -178,31 +176,25 @@ class image_converter:
       if difference > biggest_gap:
         biggest_gap = difference
         # if the left obstacle is a lane and the right obstacle is a barrel:
-
+        left = removed
+        right = current
         # ---------experimental turning ----------------#
-        avg_x1_x2 = int(removed[0] + (difference / 2))
+        avg_x1_x2 = int(left[0] + (difference / 2))
         # if the left obstacle is a lane and the right obstacle is a barrel:
-        if removed[0] == left_avg_x and current[0] != right_avg_x:
+        if left[0] == left_avg_x and right[0] != right_avg_x:
           #shift the midpoint left
-          avg_x1_x2 -= int(125*(current[1]/h_cropped))
+          avg_x1_x2 -= int(120*(right[1]/h_cropped))
+          print("shifting more left\n")
         # if the right obstacle is a lane and the left obstacle is a barrel:
-        elif removed[0] != left_avg_x and current[0] == right_avg_x:
+        elif left[0] != left_avg_x and right[0] == right_avg_x:
           #shift the midpoint right
-          avg_x1_x2 += int(125*(removed[1]/h_cropped))
+          avg_x1_x2 += int(120*(left[1]/h_cropped))
+          print("shifting more right\n")
           # print("{}".format(200*(removed[1]/h_cropped)) + "\n")
         # ---------experimental turning ----------------#
-
         # print("normal midpoint is {}".format(int(removed[0] + (difference / 2))) + "\n")
         # print("the shifted midpoint is {}".format(avg_x1_x2) + "\n")
 
-    # # If the last (rightmost) element of the heap is an obstacle, move rightwards
-    # if leftMostObstacle[0] != left_avg_x:
-    #   avg_x1_x2 -= 250
-
-    # # If the last (rightmost) element of the heap is an obstacle, move rightwards
-    # rightMostObstacle = heap[0]
-    # if rightMostObstacle[0] != right_avg_x:
-    #   avg_x1_x2 += 250
 
     cv2.circle(cv_image, (avg_x1_x2+widthScale, h//2), 10, (255,0,0), thickness=-1)
 

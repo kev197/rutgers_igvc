@@ -16,11 +16,10 @@ def callback(data):
 
     global last_print_time
     current_time = time.time()
-    if current_time - last_print_time > 1:
-        # print("-----")
+    if current_time - last_print_time > 0.5:
         print("Target Pixel: {}".format(avg))
         print("Middle Pixel: {}".format(half))
-        # print("-----\n")
+        print("\n")
         last_print_time = current_time
         
     move = Twist()
