@@ -4,11 +4,12 @@ This is the code for the Rutgers IGVC robotics club, a member of Rutgers IEEE. W
 
 ## Installation
 
-The Ubuntu version is 20.04, and the ROS version is noetic. To run the code, just put the package in the src directory of your chosen workspace and run the command
+The Ubuntu version is 20.04, and the ROS version is noetic. To run the code, put the package into the src directory. Then, run:
 
 ```bash
 catkin_make
 ```
+(it may be necessary to create an extra "temporary" package then run catkin_make because catkin doesn't recognize the package you put in directly)
 
 Also, every time you open a new terminal run
 
