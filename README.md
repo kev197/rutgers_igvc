@@ -17,8 +17,6 @@ Also, every time you open a new terminal run
 source devel/setup.bash
 ```
 
-to source the directory
-
 ## Running the Simulation
 
 _Warning: Display.launch will not properly launch the gazebo world without the necessary my_ground_plane gazebo model placed in the /.gazebo/models folder. This is a separate folder not part of this repository._
