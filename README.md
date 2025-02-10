@@ -11,7 +11,7 @@ catkin_make
 ```
 (it may be necessary to create an extra "temporary" package then run catkin_make because catkin doesn't recognize the package you put in directly)
 
-Also, every time you open a new terminal run
+Finally, run:
 
 ```bash
 source devel/setup.bash
