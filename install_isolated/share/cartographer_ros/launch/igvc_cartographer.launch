@@ -1,0 +1,107 @@
+<!--
+  Copyright 2016 The Cartographer Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<launch>    
+    <arg name="model" default="$(find cartographer_ros)/urdf/robot.urdf"/>
+  
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name" value="$(find cartographer_ros)/worlds/testWorld.world"/>
+      <arg name="debug" value="false" />
+      <arg name="gui" value="true" />
+      <arg name="paused" value="false"/>
+      <arg name="use_sim_time" value="true"/>
+      <arg name="headless" value="false"/>
+      <remap from="/mobile_base_controller/odom" to="/odom" />
+    </include>
+  
+    <param name="robot_description" command="cat $(arg model)" />
+  
+    <!-- push robot_description to factory and spawn robot in gazebo -->
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+          args="-z 1.0 -unpause -urdf -model robot -param robot_description" respawn="false" output="screen" >
+          <remap from="/mobile_base_controller/odom" to="/odom" />
+    </node>
+  
+    <node pkg="robot_state_publisher" type="robot_state_publisher"  name="robot_state_publisher"
+      respawn = "false" output="screen" >
+      <param name="publish_frequency" value="10" />
+    </node>
+  
+    <rosparam command="load"
+              file="$(find cartographer_ros)/config/joints.yaml"
+              ns="joint_state_controller" />
+    <rosparam command="load"
+              file="$(find cartographer_ros)/config/diffdrive.yaml"
+              ns="mobile_base_controller" />
+
+    <!-- <node pkg="cartographer_ros" type="fix_laser_timestamps.py" name="fix_laser_timestamps" output="screen"/>
+    <remap from="scan" to="scan_fixed" />  -->
+            
+  
+    <node name="controller_spawner" pkg="controller_manager" type="spawner"
+      args="joint_state_controller
+            mobile_base_controller 
+            --shutdown-timeout 3">
+            <remap from="/mobile_base_controller/odom" to="/odom" />
+    </node>
+
+    <node name="odom_remapper" pkg="topic_tools" type="relay" args="/mobile_base_controller/odom /odom" /> 
+  
+    <node name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
+      <param name="default_topic" value="mobile_base_controller/cmd_vel"/>
+    </node>
+  
+    <node name="cartographer_node" pkg="cartographer_ros"
+        type="cartographer_node" args="
+            -configuration_directory $(find cartographer_ros)/configuration_files
+            -configuration_basename igvc_cartographer.lua"
+        output="screen">
+      <remap from="echoes" to="horizontal_laser_2d" />
+      <param name="tf_broadcast" value="true" />
+      <param name="map_frame" value="map" />
+      <param name="odom_frame" value="odom" />
+      <param name="base_frame" value="base_link" />
+    </node>
+  
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+        type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+    
+    <!-- Path planning -->
+   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <remap from="cmd_vel" to="mobile_base_controller/cmd_vel"/>
+    <remap from="map" to="processed_map"/>
+    <rosparam file="$(find cartographer_ros)/config/move_base_params.yaml" command="load" />
+    <rosparam file="$(find cartographer_ros)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find cartographer_ros)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find cartographer_ros)/config/costmap_common.yaml" command="load" 
+      ns="global_costmap"/>
+    <rosparam file="$(find cartographer_ros)/config/costmap_common.yaml" command="load" 
+      ns="local_costmap"/>
+    <rosparam file="$(find cartographer_ros)/config/planner_local.yaml" command="load" />
+  </node>
+
+  <node pkg="cartographer_ros" type="process_map.py" name="process_map" output="screen" />
+        
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_imu" 
+    args="0 0 0 0 0 0 base_link imu_link" />
+
+  <node pkg="tf2_ros" type="buffer_server" name="tf_buffer"/>
+  <node pkg="tf2_ros" type="transform_listener" name="tf_listener" output="screen"/>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find cartographer_ros)/rviz/maps.rviz" />
+
+  </launch>
+  

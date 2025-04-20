@@ -1,0 +1,55 @@
+# move_base_params.yaml - Core Navigation Configuration
+
+### Core Behavior Parameters ###
+controller_frequency: 10.0           # Match your control loop rate
+planner_frequency: 5.0               # Global planning rate
+recovery_behavior_enabled: true      # Critical for recovery
+controller_patience: 5.0            # Wait before aborting (seconds)
+planner_patience: 30.0               # Extended planning attempts
+conservative_reset_dist: 0.5         # Reset distance after failures
+shutdown_costmaps: false             # Prevent costmap resets
+oscillation_timeout: 10.0            # Seconds to wait after oscillation
+oscillation_distance: 0.3            # Meters to trigger oscillation
+
+### Recovery Behaviors ###
+recovery_behaviors:
+  - name: 'conservative_clear'
+    type: 'clear_costmap_recovery/ClearCostmapRecovery'
+  - name: 'rotate_recovery'
+    type: 'rotate_recovery/RotateRecovery'
+  - name: 'aggressive_clear'
+    type: 'clear_costmap_recovery/ClearCostmapRecovery'
+
+### Clear Costmap Recovery Settings ###
+clear_costmap_recovery:
+  reset_distance: 3.0                # Clear radius in meters
+  force_updating: true               # Force costmap updates
+  layer_names: ["obstacle_layer"]    # Specific layers to clear
+  invert_area_to_clear: false        # Clear around robot
+
+### Rotate Recovery Settings ###
+rotate_recovery:
+  sim_granularity: 0.0175            # ~1 degree resolution
+  frequency: 10.0                    # Hz
+  acceleration_lim: 1.0              # rad/s²
+  max_rotational_vel: 1.0            # rad/s
+  tolerance: 0.10                    # rad
+  min_rotational_vel: 0.1            # rad/s
+
+### Global Planner Configuration ###
+NavfnROS:
+  allow_unknown: true                # Plan through unknown space
+  default_tolerance: 0.2             # Goal tolerance radius
+  visualize_potential: false         # Reduce computation
+  use_dijkstra: true                 # More reliable than A*
+  cost_factor: 3.0                   # Cost scaling
+
+### Costmap Common Settings ###
+# (These typically go in costmap_common_params.yaml,
+# but included here for reference)
+costmap:
+  footprint_padding: 0.15            # Robot footprint expansion
+  transform_tolerance: 0.5           # Increased TF tolerance
+  update_frequency: 5.0              # Reduced from default 10.0
+  publish_frequency: 2.0             # Reduced visualization
+  always_send_full_costmap: false    # Reduce bandwidth

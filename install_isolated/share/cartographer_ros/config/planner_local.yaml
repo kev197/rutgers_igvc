@@ -1,0 +1,58 @@
+DWAPlannerROS:
+  min_obstacle_dist: 0.2    # Minimum distance to keep from obstacles (increase this)
+  inflation_dist: 0.3
+  costmap_potential_scale: 0.1
+  penalty_epsilon: 0.3
+
+  #--------------------------------------------------
+  # Robot Kinematic Limits
+  #--------------------------------------------------
+  max_vel_x: 0.4          # Reduced from 0.7 for better control
+  min_vel_x: -1.0        
+  max_vel_theta: 0.5
+  min_in_place_vel_theta: 0.2
+  acc_lim_theta: 1.0      # Smoother angular acceleration (rad/s²)
+  holonomic_robot: false  # Correct for differential drive
+
+  #--------------------------------------------------
+  # Goal Tolerance (Tighter for precision)
+  #--------------------------------------------------
+  xy_goal_tolerance: 0.1  # Reduced from 10m (!) to 0.1m (10cm)
+  yaw_goal_tolerance: 0.2 # Reduced from 0.8 to 0.2 rad (~11°)
+  latch_xy_goal_tolerance: false  # Disabled to avoid infinite spinning
+
+  #--------------------------------------------------
+  # Trajectory Simulation (More realistic)
+  #--------------------------------------------------
+  sim_time: 1.5           # Reduced from 1.5s (faster reactions)
+  sim_granularity: 0.05
+  vx_samples: 8           # Increased from 6 for smoother linear motion
+  vth_samples: 15
+  vtheta_samples: 20      # Reduced from 40 (balanced performance)
+  heading_lookahead: 0.3  # Shorter lookahead for tighter turns
+
+  #--------------------------------------------------
+  # Obstacle Avoidance (More aggressive)
+  #--------------------------------------------------
+  path_distance_bias: 20.0  # Reduced from 0.8 (less strict path following)
+  goal_distance_bias: 15.0  # Increased from 0.2 (more goal-focused)
+  occdist_scale: 0.5       # Increased from 0.1 (stronger obstacle avoidance)
+  scaling_speed: 0.0
+  max_scaling_factor: 0.0
+
+  #--------------------------------------------------
+  # Recovery Behaviors (Enabled!)
+  #--------------------------------------------------
+  escape_theta: 0.5               # Allow small rotations to escape
+  allow_init_with_backwards_motion: true
+  escape_vel: -0.2
+  oscillation_reset_dist: 0.3  # Increased from 0.05 (less sensitive to oscillations)
+  oscillation_reset_angle: 0.5
+
+  #--------------------------------------------------
+  # Debugging (Keep these for visualization)
+  #--------------------------------------------------
+  publish_traj_pc: true      # Show trajectories in RViz
+  publish_cost_grid_pc: true # Show costmap interactions
+
+  forward_point_distance: 0.1  # Focus on immediate path curvature (default: 0.325)

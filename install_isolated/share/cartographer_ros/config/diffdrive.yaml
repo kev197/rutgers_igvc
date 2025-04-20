@@ -1,0 +1,46 @@
+type: "diff_drive_controller/DiffDriveController"
+publish_rate: 50
+
+left_wheel: [joint_left_wheel]
+right_wheel: [joint_right_wheel]
+
+wheel_separation: -0.635    # Make sure this is set correctly to the actual distance between your wheels
+wheel_radius: 0.127        # Set this to the actual radius of your wheels
+
+# Odometry covariances for the encoder output of the robot. These values should
+# be tuned to your robot's sample odometry data, but these values are a good place
+# to start
+pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+
+# Top level frame (link) of the robot description
+base_frame_id: base_link
+odom_frame_id: odom
+
+# Velocity and acceleration limits for the robot
+linear:
+  x:
+    has_velocity_limits    : true
+    max_velocity           : 1   # m/s
+    has_acceleration_limits: true
+    max_acceleration       : .7   # m/s^2
+angular:
+  z:
+    has_velocity_limits    : true
+    max_velocity           : 0.4   # rad/s
+    has_acceleration_limits: true
+    max_acceleration       : 0.6  # rad/s^2
+
+# Publish wheel joint states
+publish_wheel_joint_state: true
+
+# Use odom frame as parent for tf
+enable_odom_tf: true
+
+# Command and feedback topic names
+cmd_vel_topic: /mobile_base_controller/cmd_vel
+odom_topic: /mobile_base_controller/odom
+
+
+# enable_odom_pub: true
+use_wheel_params: true

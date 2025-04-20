@@ -1,0 +1,25 @@
+local_costmap:
+  global_frame: odom
+  robot_base_frame: hokuyo_link
+  update_frequency: 5.0
+  publish_frequency: 2.0
+  static_map: false
+  rolling_window: true
+  width: 7.0
+  height: 7.0
+  resolution: 0.01
+
+  # CRITICAL ADDITION 1: Obstacle layer tuning
+  obstacle_layer:
+    footprint_clearing_enabled: true    # Clears obstacles within robot footprint
+    max_obstacle_height: 2.0           # Must match your robot's physical height
+    combination_method: 1              # 1=Overwrite (more aggressive clearing)
+    obstacle_keep_time: 0.1            # Faster obstacle decay (was default 0.5)
+
+  # CRITICAL ADDITION 2: Inflation layer adjustments
+  inflation_layer:
+    enabled: true
+    inflation_radius: 0.45              # Reduced from default 0.5-0.8
+    cost_scaling_factor: 5.0           # Softer gradient (default 5-10)
+    inflate_unknown: false             # Don't inflate unknown space
+    inflate_around_unknown: false      # Prevents phantom obstacles
